@@ -1,0 +1,44 @@
+UniRep50 model from George Church
+
+
+https://github.com/churchlab/UniRep
+
+
+import tensorflow as tf
+import numpy as np
+
+tf.set_random_seed(42)
+np.random.seed(42)
+
+
+from unirep import babbler1900 as babbler
+MODEL_WEIGHT_PATH = "./1900_weights"
+
+OR
+
+from unirep import babbler64 as babbler
+MODEL_WEIGHT_PATH = "./64_weights"
+
+
+
+batch_size = 12
+b = babbler(batch_size=batch_size, model_path=MODEL_WEIGHT_PATH)
+
+
+
+
+
+The unirep_tutorial.ipynb notebook downloads the needed weight files for the 64-unit and 1900-unit UniRep models. However, if you want to download these or other weight files directly, you first need awscli (the AWS Command Line Interface tool). If using the docker environments built above, it is included. If working outside docker, first do pip install awscli. To grab a set of weights, do:
+
+aws s3 sync --no-sign-request --quiet s3://unirep-public/<weights_dir> <weights_dir>
+
+where <weights_dir> is one of:
+
+    1900_weights/: trained weights for the 1900-unit (full) UniRep model
+    256_weights/: trained weights for the 256-unit UniRep model
+    64_weights/: trained weights for the 64-unit UniRep model
+    1900_weights_random/: random weights that were used to initialize the 1900-unit (full) UniRep model for Random Evotuned.
+    256_weights_random/: random weights that could be used to initialize the 256-unit UniRep model (e.g. for evotuning).
+    64_weights_random/: random weights that could be used to initialize the 64-unit UniRep model (e.g. for evotuning).
+    evotuned/unirep/: the weights, as a tensorflow checkpoint file, after 13k unsupervised weight updates on fluorescent protein homologs obtained with JackHMMer of the globally pre-trained UniRep (1900-unit model).
+    evotuned/random_init/: the weights, as a tensorflow checkpoint file, after 13k unsupervised weight updates on fluorescent protein homologs obtained with JackHMMer of a randomly initialized UniRep (initialized with 1900_weights_random) that was not pre-trained at all (1900-unit model).
