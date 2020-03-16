@@ -1,0 +1,23 @@
+Metadata-Version: 1.2
+Name: UniRep50
+Version: 0.1.0
+Summary: Obtain UniRep50 embeddings for protein sequences.
+Home-page: https://github.com/EngqvistLab/UniRep
+Author: Martin Engqvist
+Author-email: martin_engqvist@chalmers.se
+License: GPLv3+
+Description: The aim of this package is to easily obtain UniRep50 embeddings for protein sequences.
+Keywords: protein sequence embeddings
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering
+Classifier: License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.2
+Classifier: Programming Language :: Python :: 3.3
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Requires-Python: >=3

@@ -1,44 +1,53 @@
+# Description
 UniRep50 model from George Church
 
-
+Originally cloned from:
 https://github.com/churchlab/UniRep
 
+Modified by Martin Engqvist
 
-import tensorflow as tf
-import numpy as np
+## Requirements
+Assuming that you use Miniconda (https://docs.conda.io/en/latest/miniconda.html) or Anaconda (https://www.anaconda.com/) the required packages can be easily installed from the yml file `packages.yml`. In a terminal execute:
+```bash
+conda env create -f packages.yml
+conda activate tf1
+```
 
-tf.set_random_seed(42)
-np.random.seed(42)
+## Installation
+Download repository and unzip (alternatively fork or clone), cd to the project base folder and execute the command below:
+
+```bash
+pip3 install -e .
+```
+
+If using an anaconda environment you may have to first locate the miniconda pip using whereis.
+```bash
+whereis pip
+```
+
+Locate the appropriate file path (the one that has anaconda and the correct environment in the filepath) and run the modified command. For example:
+
+```bash
+/home/username/miniconda3/envs/py37/bin/pip install -e .
+```
+
+The library should now be available for loading in all your python scripts.
 
 
-from unirep import babbler1900 as babbler
-MODEL_WEIGHT_PATH = "./1900_weights"
+## Usage
 
-OR
-
-from unirep import babbler64 as babbler
-MODEL_WEIGHT_PATH = "./64_weights"
-
-
-
-batch_size = 12
-b = babbler(batch_size=batch_size, model_path=MODEL_WEIGHT_PATH)
+```python
+from unirep.run_inference import BatchInference
+inf_obj = BatchInference(batch_size=256)
+df = inf_obj.run_inference(filepath='my_sequences.fasta')
+df.to_csv('my_sequences_embeddings.tsv', sep='\t')
+```
 
 
+## License
+Copyright 2018, 2019 Ethan Alley, Grigory Khimulya, Surojit Biswas
 
+All the model weights are licensed under the terms of Creative Commons Attribution-NonCommercial 4.0 International License. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc/4.0/ or send a letter to Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
+Otherwise the code in this repository is licensed under the terms of [GPL v3](https://www.gnu.org/licenses/gpl-3.0.html) as specified by the gpl.txt file.
 
-The unirep_tutorial.ipynb notebook downloads the needed weight files for the 64-unit and 1900-unit UniRep models. However, if you want to download these or other weight files directly, you first need awscli (the AWS Command Line Interface tool). If using the docker environments built above, it is included. If working outside docker, first do pip install awscli. To grab a set of weights, do:
-
-aws s3 sync --no-sign-request --quiet s3://unirep-public/<weights_dir> <weights_dir>
-
-where <weights_dir> is one of:
-
-    1900_weights/: trained weights for the 1900-unit (full) UniRep model
-    256_weights/: trained weights for the 256-unit UniRep model
-    64_weights/: trained weights for the 64-unit UniRep model
-    1900_weights_random/: random weights that were used to initialize the 1900-unit (full) UniRep model for Random Evotuned.
-    256_weights_random/: random weights that could be used to initialize the 256-unit UniRep model (e.g. for evotuning).
-    64_weights_random/: random weights that could be used to initialize the 64-unit UniRep model (e.g. for evotuning).
-    evotuned/unirep/: the weights, as a tensorflow checkpoint file, after 13k unsupervised weight updates on fluorescent protein homologs obtained with JackHMMer of the globally pre-trained UniRep (1900-unit model).
-    evotuned/random_init/: the weights, as a tensorflow checkpoint file, after 13k unsupervised weight updates on fluorescent protein homologs obtained with JackHMMer of a randomly initialized UniRep (initialized with 1900_weights_random) that was not pre-trained at all (1900-unit model).

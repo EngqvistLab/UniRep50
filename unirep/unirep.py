@@ -1,4 +1,4 @@
-"""
+axis="""
 The trained 1900-dimensional mLSTM babbler.
 """
 
@@ -7,8 +7,9 @@ import numpy as np
 import pandas as pd
 import sys
 sys.path.append('../')
-from data_utils import aa_seq_to_int, int_to_aa, bucketbatchpad
+from unirep.data_utils import aa_seq_to_int, int_to_aa, bucketbatchpad
 import os
+from pkg_resources import resource_stream, resource_filename, resource_exists
 
 # Helpers
 def tf_get_shape(tensor):
@@ -24,7 +25,7 @@ def sample_with_temp(logits, t):
     """
     t_adjusted = logits / t  # broadcast temperature normalization
     softed = tf.nn.softmax(t_adjusted)
-    
+
     # Make a categorical distribution from the softmax and sample
     return tf.distributions.Categorical(probs=softed).sample()
 
@@ -32,19 +33,19 @@ def initialize_uninitialized(sess):
     """
     from https://stackoverflow.com/questions/35164529/in-tensorflow-is-there-any-way-to-just-initialize-uninitialised-variables
     """
-    global_vars = tf.global_variables()
-    is_not_initialized = sess.run([tf.is_variable_initialized(var) for var in global_vars])
+    global_vars = tf.compat.v1.global_variables()
+    is_not_initialized = sess.run([tf.compat.v1.is_variable_initialized(var) for var in global_vars])
     not_initialized_vars = [v for (v, f) in zip(global_vars, is_not_initialized) if not f]
     if len(not_initialized_vars):
-        sess.run(tf.variables_initializer(not_initialized_vars))
+        sess.run(tf.compat.v1.variables_initializer(not_initialized_vars))
 
 
 # Setup to initialize from the correctly named model files.
-class mLSTMCell1900(tf.nn.rnn_cell.RNNCell):
+class mLSTMCell1900(tf.compat.v1.nn.rnn_cell.RNNCell):
 
     def __init__(self,
                  num_units,
-                 model_path="./",
+                 model_path=resource_filename(__name__, "1900_weights"),
                  wn=True,
                  scope='mlstm',
                  var_device='cpu:0',
@@ -79,7 +80,7 @@ class mLSTMCell1900(tf.nn.rnn_cell.RNNCell):
 
         # Unpack the state tuple
         c_prev, h_prev = state
-        with tf.variable_scope(self._scope):
+        with tf.compat.v1.variable_scope(self._scope):
             wx_init = np.load(os.path.join(self._model_path, "rnn_mlstm_mlstm_wx:0.npy"))
             wh_init = np.load(os.path.join(self._model_path, "rnn_mlstm_mlstm_wh:0.npy"))
             wmx_init = np.load(os.path.join(self._model_path, "rnn_mlstm_mlstm_wmx:0.npy"))
@@ -88,32 +89,32 @@ class mLSTMCell1900(tf.nn.rnn_cell.RNNCell):
             gx_init = np.load(os.path.join(self._model_path, "rnn_mlstm_mlstm_gx:0.npy"))
             gh_init = np.load(os.path.join(self._model_path, "rnn_mlstm_mlstm_gh:0.npy"))
             gmx_init = np.load(os.path.join(self._model_path, "rnn_mlstm_mlstm_gmx:0.npy"))
-            gmh_init = np.load(os.path.join(self._model_path, "rnn_mlstm_mlstm_gmh:0.npy"))        
-            wx = tf.get_variable(
+            gmh_init = np.load(os.path.join(self._model_path, "rnn_mlstm_mlstm_gmh:0.npy"))
+            wx = tf.compat.v1.get_variable(
                 "wx", initializer=wx_init)
-            wh = tf.get_variable(
+            wh = tf.compat.v1.get_variable(
                 "wh", initializer=wh_init)
-            wmx = tf.get_variable(
+            wmx = tf.compat.v1.get_variable(
                 "wmx", initializer=wmx_init)
-            wmh = tf.get_variable(
+            wmh = tf.compat.v1.get_variable(
                 "wmh", initializer=wmh_init)
-            b = tf.get_variable(
+            b = tf.compat.v1.get_variable(
                 "b", initializer=b_init)
             if self._wn:
-                gx = tf.get_variable(
+                gx = tf.compat.v1.get_variable(
                     "gx", initializer=gx_init)
-                gh = tf.get_variable(
+                gh = tf.compat.v1.get_variable(
                     "gh", initializer=gh_init)
-                gmx = tf.get_variable(
+                gmx = tf.compat.v1.get_variable(
                     "gmx", initializer=gmx_init)
-                gmh = tf.get_variable(
+                gmh = tf.compat.v1.get_variable(
                     "gmh", initializer=gmh_init)
 
         if self._wn:
-            wx = tf.nn.l2_normalize(wx, dim=0) * gx
-            wh = tf.nn.l2_normalize(wh, dim=0) * gh
-            wmx = tf.nn.l2_normalize(wmx, dim=0) * gmx
-            wmh = tf.nn.l2_normalize(wmh, dim=0) * gmh
+            wx = tf.nn.l2_normalize(wx, axis=0) * gx
+            wh = tf.nn.l2_normalize(wh, axis=0) * gh
+            wmx = tf.nn.l2_normalize(wmx, axis=0) * gmx
+            wmh = tf.nn.l2_normalize(wmh, axis=0) * gmh
         m = tf.matmul(inputs, wmx) * tf.matmul(h_prev, wmh)
         z = tf.matmul(inputs, wx) + tf.matmul(m, wh) + b
         i, f, o, u = tf.split(z, 4, 1)
@@ -125,7 +126,7 @@ class mLSTMCell1900(tf.nn.rnn_cell.RNNCell):
         h = o * tf.tanh(c)
         return h, (c, h)
 
-class mLSTMCell(tf.nn.rnn_cell.RNNCell):
+class mLSTMCell(tf.compat.v1.nn.rnn_cell.RNNCell):
 
     def __init__(self,
                  num_units,
@@ -180,32 +181,32 @@ class mLSTMCell(tf.nn.rnn_cell.RNNCell):
 
         # Unpack the state tuple
         c_prev, h_prev = state
-        with tf.variable_scope(self._scope):
-            wx = tf.get_variable(
+        with tf.compat.v1.variable_scope(self._scope):
+            wx = tf.compat.v1.get_variable(
                 "wx", initializer=self._wx_init)
-            wh = tf.get_variable(
+            wh = tf.compat.v1.get_variable(
                 "wh", initializer=self._wh_init)
-            wmx = tf.get_variable(
+            wmx = tf.compat.v1.get_variable(
                 "wmx", initializer=self._wmx_init)
-            wmh = tf.get_variable(
+            wmh = tf.compat.v1.get_variable(
                 "wmh", initializer=self._wmh_init)
-            b = tf.get_variable(
+            b = tf.compat.v1.get_variable(
                 "b", initializer=self._b_init)
             if self._wn:
-                gx = tf.get_variable(
+                gx = tf.compat.v1.get_variable(
                     "gx", initializer=self._gx_init)
-                gh = tf.get_variable(
+                gh = tf.compat.v1.get_variable(
                     "gh", initializer=self._gh_init)
-                gmx = tf.get_variable(
+                gmx = tf.compat.v1.get_variable(
                     "gmx", initializer=self._gmx_init)
-                gmh = tf.get_variable(
+                gmh = tf.compat.v1.get_variable(
                     "gmh", initializer=self._gmh_init)
 
         if self._wn:
-            wx = tf.nn.l2_normalize(wx, dim=0) * gx
-            wh = tf.nn.l2_normalize(wh, dim=0) * gh
-            wmx = tf.nn.l2_normalize(wmx, dim=0) * gmx
-            wmh = tf.nn.l2_normalize(wmh, dim=0) * gmh
+            wx = tf.nn.l2_normalize(wx, axis=0) * gx
+            wh = tf.nn.l2_normalize(wh, axis=0) * gh
+            wmx = tf.nn.l2_normalize(wmx, axis=0) * gmx
+            wmh = tf.nn.l2_normalize(wmh, axis=0) * gmh
         m = tf.matmul(inputs, wmx) * tf.matmul(h_prev, wmh)
         z = tf.matmul(inputs, wx) + tf.matmul(m, wh) + b
         i, f, o, u = tf.split(z, 4, 1)
@@ -217,7 +218,7 @@ class mLSTMCell(tf.nn.rnn_cell.RNNCell):
         h = o * tf.tanh(c)
         return h, (c, h)
 
-class mLSTMCellStackNPY(tf.nn.rnn_cell.RNNCell):
+class mLSTMCellStackNPY(tf.compat.v1.nn.rnn_cell.RNNCell):
 
     def __init__(self,
                  num_units=256,
@@ -227,7 +228,7 @@ class mLSTMCellStackNPY(tf.nn.rnn_cell.RNNCell):
                  wn=True,
                  scope='mlstm_stack',
                  var_device='cpu:0',
-                 model_path="./"
+                 model_path=resource_filename(__name__, "1900_weights")
                  ):
         # Really not sure if I should reuse here
         super(mLSTMCellStackNPY, self).__init__()
@@ -254,7 +255,7 @@ class mLSTMCellStackNPY(tf.nn.rnn_cell.RNNCell):
             gx_init=np.load(join(bs + "{0}_mlstm_stack{1}_gx:0.npy".format(i,i))),
             gh_init=np.load(join(bs + "{0}_mlstm_stack{1}_gh:0.npy".format(i,i))),
             gmx_init=np.load(join(bs + "{0}_mlstm_stack{1}_gmx:0.npy".format(i,i))),
-            gmh_init=np.load(join(bs + "{0}_mlstm_stack{1}_gmh:0.npy".format(i,i)))      
+            gmh_init=np.load(join(bs + "{0}_mlstm_stack{1}_gmh:0.npy".format(i,i)))
                  ) for i in range(self._num_layers)]
         if self._dropout:
             layers = [
@@ -266,7 +267,7 @@ class mLSTMCellStackNPY(tf.nn.rnn_cell.RNNCell):
     def state_size(self):
         # The state is a tuple of c and h
         return (
-            tuple(self._num_units for _ in range(self._num_layers)), 
+            tuple(self._num_units for _ in range(self._num_layers)),
             tuple(self._num_units for _ in range(self._num_layers))
             )
 
@@ -286,7 +287,7 @@ class mLSTMCellStackNPY(tf.nn.rnn_cell.RNNCell):
 
         # Unpack the state tuple
         c_prev, h_prev = state
-        
+
         new_outputs = []
         new_cs = []
         new_hs = []
@@ -298,7 +299,7 @@ class mLSTMCellStackNPY(tf.nn.rnn_cell.RNNCell):
             new_outputs.append(h)
             new_cs.append(c)
             new_hs.append(h_state)
-        
+
         if self._res_connect:
             # Make sure number of layers does not affect the scale of the output
             scale_factor = tf.constant(1 / float(self._num_layers))
@@ -308,11 +309,11 @@ class mLSTMCellStackNPY(tf.nn.rnn_cell.RNNCell):
 
         return final_output, (tuple(new_cs), tuple(new_hs))
 
-    
+
 class babbler1900():
 
     def __init__(self,
-                 model_path="./pbab_weights",
+                 model_path=resource_filename(__name__, "1900_weights"),
                  batch_size=256
                  ):
         self._rnn_size = 1900
@@ -322,22 +323,22 @@ class babbler1900():
         self._shuffle_buffer = 10000
         self._model_path = model_path
         self._batch_size = batch_size
-        self._batch_size_placeholder = tf.placeholder(tf.int32, shape=[], name="batch_size")
-        self._minibatch_x_placeholder = tf.placeholder(
+        self._batch_size_placeholder = tf.compat.v1.placeholder(tf.int32, shape=[], name="batch_size")
+        self._minibatch_x_placeholder = tf.compat.v1.placeholder(
             tf.int32, shape=[None, None], name="minibatch_x")
         self._initial_state_placeholder = (
-            tf.placeholder(tf.float32, shape=[None, self._rnn_size]),
-            tf.placeholder(tf.float32, shape=[None, self._rnn_size])
+            tf.compat.v1.placeholder(tf.float32, shape=[None, self._rnn_size]),
+            tf.compat.v1.placeholder(tf.float32, shape=[None, self._rnn_size])
         )
-        self._minibatch_y_placeholder = tf.placeholder(
+        self._minibatch_y_placeholder = tf.compat.v1.placeholder(
             tf.int32, shape=[None, None], name="minibatch_y")
         # Batch size dimensional placeholder which gives the
         # Lengths of the input sequence batch. Used to index into
         # The final_hidden output and select the stop codon -1
         # final hidden for the graph operation.
-        self._seq_length_placeholder = tf.placeholder(
+        self._seq_length_placeholder = tf.compat.v1.placeholder(
             tf.int32, shape=[None], name="seq_len")
-        self._temp_placeholder = tf.placeholder(tf.float32, shape=[], name="temp")
+        self._temp_placeholder = tf.compat.v1.placeholder(tf.float32, shape=[], name="temp")
         rnn = mLSTMCell1900(self._rnn_size,
                     model_path=model_path,
                         wn=self._wn)
@@ -350,7 +351,7 @@ class babbler1900():
 
         pad_adjusted_targets = (self._minibatch_y_placeholder - 1) + inverse_mask
 
-        embed_matrix = tf.get_variable(
+        embed_matrix = tf.compat.v1.get_variable(
             "embed_matrix", dtype=tf.float32, initializer=np.load(os.path.join(self._model_path, "embed_matrix:0.npy"))
         )
         embed_cell = tf.nn.embedding_lookup(embed_matrix, self._minibatch_x_placeholder)
@@ -361,7 +362,7 @@ class babbler1900():
             swap_memory=True,
             parallel_iterations=1
         )
-        
+
         # If we are training a model on top of the rep model, we need to access
         # the final_hidden rep from output. Recall we are padding these sequences
         # to max length, so the -1 position will not necessarily be the right rep.
@@ -387,19 +388,19 @@ class babbler1900():
         )
         self._loss = tf.reduce_mean(batch_losses)
         self._sample = sample_with_temp(self._logits, self._temp_placeholder)
-        with tf.Session() as sess:
+        with tf.compat.v1.Session() as sess:
             self._zero_state = sess.run(zero_state)
             self._single_zero = sess.run(single_zero)
 
-     
+
     def get_rep(self,seq):
         """
-        Input a valid amino acid sequence, 
+        Input a valid amino acid sequence,
         outputs a tuple of average hidden, final hidden, final cell representation arrays.
         Unfortunately, this method accepts one sequence at a time and is as such quite
         slow.
         """
-        with tf.Session() as sess:
+        with tf.compat.v1.Session() as sess:
             initialize_uninitialized(sess)
             # Strip any whitespace and convert to integers with the correct coding
             int_seq = aa_seq_to_int(seq.strip())[:-1]
@@ -429,16 +430,16 @@ class babbler1900():
         slow.
 
         """
-        with tf.Session() as sess:
+        with tf.compat.v1.Session() as sess:
             initialize_uninitialized(sess)
             int_seed = aa_seq_to_int(seed.strip())[:-1]
-        
+
             # No need for padding because this is a single element
             seed_samples, final_state_ = sess.run(
-                [self._sample, self._final_state], 
+                [self._sample, self._final_state],
                 feed_dict={
                     self._minibatch_x_placeholder: [int_seed],
-                    self._initial_state_placeholder: self._zero_state, 
+                    self._initial_state_placeholder: self._zero_state,
                     self._batch_size_placeholder: 1,
                     self._temp_placeholder: temp
                 }
@@ -446,41 +447,41 @@ class babbler1900():
             # Just the actual character prediction
             pred_int = seed_samples[0, -1] + 1
             seed = seed + int_to_aa[pred_int]
-        
+
             for i in range(length - len(seed)):
                 pred_int, final_state_ = sess.run(
-                    [self._sample, self._final_state], 
+                    [self._sample, self._final_state],
                     feed_dict={
                         self._minibatch_x_placeholder: [[pred_int]],
-                        self._initial_state_placeholder: final_state_, 
+                        self._initial_state_placeholder: final_state_,
                         self._batch_size_placeholder: 1,
                         self._temp_placeholder: temp
                     }
                 )
                 pred_int = pred_int[0, 0] + 1
                 seed = seed + int_to_aa[pred_int]
-        return seed        
-        
+        return seed
+
     def get_rep_ops(self):
         """
         Return tensorflow operations for the final_hidden state and placeholder.
         POSTPONED: Implement avg. hidden
         """
         return self._top_final_hidden, self._minibatch_x_placeholder, self._batch_size_placeholder, self._seq_length_placeholder, self._initial_state_placeholder
-        
+
     def get_babbler_ops(self):
         """
-        Return tensorflow operations for 
+        Return tensorflow operations for
         the logits, masked loss, minibatch_x placeholder, minibatch y placeholder, batch_size placeholder, initial_state placeholder
-        Use if you plan on using babbler1900 as an initialization for another babbler, 
+        Use if you plan on using babbler1900 as an initialization for another babbler,
         eg for fine tuning the babbler to babble a differenct distribution.
         """
         return self._logits, self._loss, self._minibatch_x_placeholder, self._minibatch_y_placeholder, self._batch_size_placeholder, self._initial_state_placeholder
 
     def dump_weights(self,sess,dir_name="./1900_weights"):
         """
-        Saves the weights of the model in dir_name in the format required 
-        for loading in this module. Must be called within a tf.Session
+        Saves the weights of the model in dir_name in the format required
+        for loading in this module. Must be called within a tf.compat.v1.Session
         For which the weights are already initialized.
         """
         vs = tf.trainable_variables()
@@ -490,13 +491,13 @@ class babbler1900():
             print(name)
             print(value)
             np.save(os.path.join(dir_name,name.replace('/', '_') + ".npy"), np.array(value))
-            
+
 
 
     def format_seq(self,seq,stop=False):
         """
         Takes an amino acid sequence, returns a list of integers in the codex of the babbler.
-        Here, the default is to strip the stop symbol (stop=False) which would have 
+        Here, the default is to strip the stop symbol (stop=False) which would have
         otherwise been added to the end of the sequence. If you are trying to generate
         a rep, do not include the stop. It is probably best to ignore the stop if you are
         co-tuning the babbler and a top model as well.
@@ -513,7 +514,7 @@ class babbler1900():
         Read sequences from a filepath, batch them into buckets of similar lengths, and
         pad out to the longest sequence.
         Upper, lower and interval define how the buckets are created.
-        Any sequence shorter than lower will be grouped together, as with any greater 
+        Any sequence shorter than lower will be grouped together, as with any greater
         than upper. Interval defines the "walls" of all the other buckets.
         WARNING: Define large intervals for small datasets because the default behavior
         is to repeat the same sequence to fill a batch. If there is only one sequence
@@ -540,7 +541,7 @@ class babbler1900():
         IF USING IN COMBINATION WITH format_seq then set stop=True there.
         Return a list of batch, target tuples.
         The input (array-like) should
-        look like 
+        look like
         1. . . . . . . . sequence_length
         .
         .
@@ -571,208 +572,3 @@ class babbler1900():
             return True
         else:
             return False
-
-class babbler256(babbler1900):
-    """
-    Tested get_rep and get_rep_ops, assumed rest was unaffected by subclassing.
-    """
-
-    def __init__(self,
-                 model_path="./256_weights/",
-                 batch_size=256
-                 ):
-        self._rnn_size = 256
-        self._vocab_size = 26
-        self._embed_dim = 10
-        self._num_layers = 4
-        self._wn = True
-        self._shuffle_buffer = 10000
-        self._model_path = model_path
-        self._batch_size = batch_size
-        self._batch_size_placeholder = tf.placeholder(tf.int32, shape=[], name="batch_size")
-        self._minibatch_x_placeholder = tf.placeholder(
-            tf.int32, shape=[None, None], name="minibatch_x")
-        self._initial_state_placeholder = (
-                tuple(tf.placeholder(tf.float32, shape=[None, self._rnn_size]) for _ in range(self._num_layers)),
-                tuple(tf.placeholder(tf.float32, shape=[None, self._rnn_size]) for _ in range(self._num_layers))
-    )
-        self._minibatch_y_placeholder = tf.placeholder(
-            tf.int32, shape=[None, None], name="minibatch_y")
-        # Batch size dimensional placeholder which gives the
-        # Lengths of the input sequence batch. Used to index into
-        # The final_hidden output and select the stop codon -1
-        # final hidden for the graph operation.
-        self._seq_length_placeholder = tf.placeholder(
-            tf.int32, shape=[None], name="seq_len")
-        self._temp_placeholder = tf.placeholder(tf.float32, shape=[], name="temp")
-        rnn = mLSTMCellStackNPY(num_units=self._rnn_size,
-                            num_layers=self._num_layers,
-                            model_path=model_path,
-                            wn=self._wn)
-        zero_state = rnn.zero_state(self._batch_size, tf.float32)
-        single_zero = rnn.zero_state(1, tf.float32)
-        mask = tf.sign(self._minibatch_y_placeholder)  # 1 for nonpad, zero for pad
-        inverse_mask = 1 - mask  # 0 for nonpad, 1 for pad
-
-        total_padded = tf.reduce_sum(inverse_mask)
-
-        pad_adjusted_targets = (self._minibatch_y_placeholder - 1) + inverse_mask
-
-        embed_matrix = tf.get_variable(
-            "embed_matrix", dtype=tf.float32, initializer=np.load(os.path.join(self._model_path, "embed_matrix:0.npy"))
-        )
-        embed_cell = tf.nn.embedding_lookup(embed_matrix, self._minibatch_x_placeholder)
-        self._output, self._final_state = tf.nn.dynamic_rnn(
-            rnn,
-            embed_cell,
-            initial_state=self._initial_state_placeholder,
-            swap_memory=True,
-            parallel_iterations=1
-        )
-        
-        # If we are training a model on top of the rep model, we need to access
-        # the final_hidden rep from output. Recall we are padding these sequences
-        # to max length, so the -1 position will not necessarily be the right rep.
-        # to get the right rep, I will use the provided sequence length to index.
-        # Subtract one for the last place
-        indices = self._seq_length_placeholder - 1
-        self._top_final_hidden = tf.gather_nd(self._output, tf.stack([tf.range(tf_get_shape(self._output)[0], dtype=tf.int32), indices], axis=1))
-        # LEFTOFF self._output is a batch size, seq_len, num_hidden.
-        # I want to average along num_hidden, but I'll have to figure out how to mask out
-        # the dimensions along sequence_length which are longer than the given sequence.
-        flat = tf.reshape(self._output, [-1, self._rnn_size])
-        logits_flat = tf.contrib.layers.fully_connected(
-            flat, self._vocab_size - 1, activation_fn=None,
-            weights_initializer=tf.constant_initializer(np.load(os.path.join(self._model_path, "fully_connected_weights:0.npy"))),
-            biases_initializer=tf.constant_initializer(np.load(os.path.join(self._model_path, "fully_connected_biases:0.npy"))))
-        self._logits = tf.reshape(
-            logits_flat, [batch_size, tf_get_shape(self._minibatch_x_placeholder)[1], self._vocab_size - 1])
-        batch_losses = tf.contrib.seq2seq.sequence_loss(
-            self._logits,
-            tf.cast(pad_adjusted_targets, tf.int32),
-            tf.cast(mask, tf.float32),
-            average_across_batch=False
-        )
-        self._loss = tf.reduce_mean(batch_losses)
-        self._sample = sample_with_temp(self._logits, self._temp_placeholder)
-        with tf.Session() as sess:
-            self._zero_state = sess.run(zero_state)
-            self._single_zero = sess.run(single_zero)
-
-    def get_rep(self,seq):
-        """
-        get_rep needs to be minorly adjusted to accomadate the different state size of the 
-        stack.
-        Input a valid amino acid sequence, 
-        outputs a tuple of average hidden, final hidden, final cell representation arrays.
-        Unfortunately, this method accepts one sequence at a time and is as such quite
-        slow.
-        """
-        with tf.Session() as sess:
-            initialize_uninitialized(sess)
-            # Strip any whitespace and convert to integers with the correct coding
-            int_seq = aa_seq_to_int(seq.strip())[:-1]
-            # Final state is a cell_state, hidden_state tuple. Output is
-            # all hidden states
-            final_state_, hs = sess.run(
-                [self._final_state, self._output], feed_dict={
-                    self._batch_size_placeholder: 1,
-                    self._minibatch_x_placeholder: [int_seq],
-                    self._initial_state_placeholder: self._zero_state}
-            )
-
-        final_cell, final_hidden = final_state_
-        # Because this is a deep model, each of final hidden and final cell is tuple of num_layers
-        final_cell = final_cell[-1]
-        final_hidden = final_hidden[-1]
-        hs = hs[0]
-        avg_hidden = np.mean(hs, axis=0)
-        return avg_hidden, final_hidden[0], final_cell[0]
-
-
-class babbler64(babbler256):
-    """
-    Tested get_rep and dump weights. Assumed rest unaffected by subclassing.
-    """
-
-    def __init__(self,
-                 model_path="./64_weights/",
-                 batch_size=256
-                 ):
-        self._rnn_size = 64
-        self._vocab_size = 26
-        self._embed_dim = 10
-        self._num_layers = 4
-        self._wn = True
-        self._shuffle_buffer = 10000
-        self._model_path = model_path
-        self._batch_size = batch_size
-        self._batch_size_placeholder = tf.placeholder(tf.int32, shape=[], name="batch_size")
-        self._minibatch_x_placeholder = tf.placeholder(
-            tf.int32, shape=[None, None], name="minibatch_x")
-        self._initial_state_placeholder = (
-                tuple(tf.placeholder(tf.float32, shape=[None, self._rnn_size]) for _ in range(self._num_layers)),
-                tuple(tf.placeholder(tf.float32, shape=[None, self._rnn_size]) for _ in range(self._num_layers))
-    )
-        self._minibatch_y_placeholder = tf.placeholder(
-            tf.int32, shape=[None, None], name="minibatch_y")
-        # Batch size dimensional placeholder which gives the
-        # Lengths of the input sequence batch. Used to index into
-        # The final_hidden output and select the stop codon -1
-        # final hidden for the graph operation.
-        self._seq_length_placeholder = tf.placeholder(
-            tf.int32, shape=[None], name="seq_len")
-        self._temp_placeholder = tf.placeholder(tf.float32, shape=[], name="temp")
-        rnn = mLSTMCellStackNPY(num_units=self._rnn_size,
-                            num_layers=self._num_layers,
-                            model_path=model_path,
-                            wn=self._wn)
-        zero_state = rnn.zero_state(self._batch_size, tf.float32)
-        single_zero = rnn.zero_state(1, tf.float32)
-        mask = tf.sign(self._minibatch_y_placeholder)  # 1 for nonpad, zero for pad
-        inverse_mask = 1 - mask  # 0 for nonpad, 1 for pad
-
-        total_padded = tf.reduce_sum(inverse_mask)
-
-        pad_adjusted_targets = (self._minibatch_y_placeholder - 1) + inverse_mask
-
-        embed_matrix = tf.get_variable(
-            "embed_matrix", dtype=tf.float32, initializer=np.load(os.path.join(self._model_path, "embed_matrix:0.npy"))
-        )
-        embed_cell = tf.nn.embedding_lookup(embed_matrix, self._minibatch_x_placeholder)
-        self._output, self._final_state = tf.nn.dynamic_rnn(
-            rnn,
-            embed_cell,
-            initial_state=self._initial_state_placeholder,
-            swap_memory=True,
-            parallel_iterations=1
-        )
-        
-        # If we are training a model on top of the rep model, we need to access
-        # the final_hidden rep from output. Recall we are padding these sequences
-        # to max length, so the -1 position will not necessarily be the right rep.
-        # to get the right rep, I will use the provided sequence length to index.
-        # Subtract one for the last place
-        indices = self._seq_length_placeholder - 1
-        self._top_final_hidden = tf.gather_nd(self._output, tf.stack([tf.range(tf_get_shape(self._output)[0], dtype=tf.int32), indices], axis=1))
-        # LEFTOFF self._output is a batch size, seq_len, num_hidden.
-        # I want to average along num_hidden, but I'll have to figure out how to mask out
-        # the dimensions along sequence_length which are longer than the given sequence.
-        flat = tf.reshape(self._output, [-1, self._rnn_size])
-        logits_flat = tf.contrib.layers.fully_connected(
-            flat, self._vocab_size - 1, activation_fn=None,
-            weights_initializer=tf.constant_initializer(np.load(os.path.join(self._model_path, "fully_connected_weights:0.npy"))),
-            biases_initializer=tf.constant_initializer(np.load(os.path.join(self._model_path, "fully_connected_biases:0.npy"))))
-        self._logits = tf.reshape(
-            logits_flat, [batch_size, tf_get_shape(self._minibatch_x_placeholder)[1], self._vocab_size - 1])
-        batch_losses = tf.contrib.seq2seq.sequence_loss(
-            self._logits,
-            tf.cast(pad_adjusted_targets, tf.int32),
-            tf.cast(mask, tf.float32),
-            average_across_batch=False
-        )
-        self._loss = tf.reduce_mean(batch_losses)
-        self._sample = sample_with_temp(self._logits, self._temp_placeholder)
-        with tf.Session() as sess:
-            self._zero_state = sess.run(zero_state)
-            self._single_zero = sess.run(single_zero)
