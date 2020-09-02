@@ -1,3 +1,4 @@
+README.md
 setup.py
 UniRep50.egg-info/PKG-INFO
 UniRep50.egg-info/SOURCES.txt
@@ -5,5 +6,6 @@ UniRep50.egg-info/dependency_links.txt
 UniRep50.egg-info/top_level.txt
 unirep/__init__.py
 unirep/data_utils.py
+unirep/run_inference.py
 unirep/unirep.py
-unirep/xunirep.py
+unirep/xunirep_compat_changes.py
