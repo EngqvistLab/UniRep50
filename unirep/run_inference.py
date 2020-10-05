@@ -69,7 +69,7 @@ class BatchInference(object):
     '''
     def __init__(self, batch_size, model_path=resource_filename(__name__, "1900_weights")):
         self.batch_size = batch_size
-	self.model_path = model_path
+        self.model_path = model_path
 
         # initialize the babbler
         self.bab = BatchBabbler1900(batch_size=self.batch_size, model_path=self.model_path)
