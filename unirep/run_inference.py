@@ -16,6 +16,8 @@ from Bio import AlignIO
 from unirep import unirep
 from unirep import data_utils
 
+from pkg_resources import resource_filename
+
 
 class BatchBabbler1900(unirep.babbler1900):
     '''
@@ -23,7 +25,7 @@ class BatchBabbler1900(unirep.babbler1900):
     '''
 
     def __init__(self, batch_size=32):
-        super().__init__(batch_size=batch_size, **kvargs)
+        super().__init__(batch_size=batch_size, model_path=resource_filename(__name__, "1900_weights"))
 
     def get_rep(self, seqs, sess):
         """
@@ -69,7 +71,7 @@ class BatchInference(object):
         self.batch_size = batch_size
 
         # initialize the babbler
-        self.bab = BatchBabbler1900(self.batch_size)
+        self.bab = BatchBabbler1900(self.batch_size, model_path=resource_filename(__name__, "1900_weights"))
 
     def run_inference(self, filepath):
         '''
