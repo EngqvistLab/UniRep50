@@ -23,7 +23,7 @@ class BatchBabbler1900(unirep.babbler1900):
     '''
 
     def __init__(self, batch_size=32):
-        super().__init__(batch_size=batch_size)
+        super().__init__(batch_size=batch_size, **kvargs)
 
     def get_rep(self, seqs, sess):
         """
