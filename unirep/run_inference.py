@@ -24,8 +24,8 @@ class BatchBabbler1900(unirep.babbler1900):
     Subclass babbler to replace the get_rep method.
     '''
 
-    def __init__(self, batch_size=32):
-        super().__init__(batch_size=batch_size, model_path=resource_filename(__name__, "1900_weights"))
+    def __init__(self, batch_size=32, model_path=resource_filename(__name__, "1900_weights")):
+        super().__init__(batch_size=batch_size, model_path=model_path)
 
     def get_rep(self, seqs, sess):
         """
@@ -67,11 +67,12 @@ class BatchInference(object):
     The main idea is to group sequences of the same length.
     This speeds up things quite a lot.
     '''
-    def __init__(self, batch_size):
+    def __init__(self, batch_size, model_path=resource_filename(__name__, "1900_weights")):
         self.batch_size = batch_size
+	self.model_path = model_path
 
         # initialize the babbler
-        self.bab = BatchBabbler1900(self.batch_size, model_path=resource_filename(__name__, "1900_weights"))
+        self.bab = BatchBabbler1900(batch_size=self.batch_size, model_path=self.model_path)
 
     def run_inference(self, filepath):
         '''
