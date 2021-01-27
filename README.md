@@ -36,12 +36,12 @@ The library should now be available for loading in all your python scripts.
 
 
 ## Usage
-The sequences you wish to convert to UniRep embeddings need to be collected in a single FASTA file.
+The sequences you wish to convert to UniRep embeddings need to be collected in a single FASTA file. The three embedding types are appended to create a vector of 5700 numbers and are output to a tab-separated file.
 ```python3
-from unirep.run_inference import BatchInference
-inf_obj = BatchInference(batch_size=256)
-df = inf_obj.run_inference(filepath='my_sequences.fasta')
-df.to_csv('my_sequences_embeddings.tsv', sep='\t')
+>>> from unirep.run_inference import BatchInference
+>>> inf_obj = BatchInference(batch_size=256)
+>>> df = inf_obj.run_inference(filepath='my_sequences.fasta')
+>>> df.to_csv('my_sequences_embeddings.tsv', sep='\t')
 ```
 
 
