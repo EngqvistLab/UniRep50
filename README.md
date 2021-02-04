@@ -11,7 +11,7 @@ Code simplified and modified to carry out batch inference by Martin Engqvist
 Assuming that you use Miniconda (https://docs.conda.io/en/latest/miniconda.html) or Anaconda (https://www.anaconda.com/) the required packages can be easily installed from the yml file `packages.yml`. In a terminal execute:
 ```bash
 conda env create -f packages.yml
-conda activate tf1.9
+conda activate tf1.15
 ```
 
 ## Installation
