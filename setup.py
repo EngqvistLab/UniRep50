@@ -30,13 +30,14 @@ long_description = 'The aim of this package is to easily obtain UniRep50 embeddi
 setup(
 	name='unirep',    # This is the name of your PyPI-package.
 	description='Obtain UniRep50 embeddings for protein sequences.',       #package description
-    long_description=long_description,
-    version='0.1.2',                          # MAJOR.MINOR.PATCH
+        long_description=long_description,
+        version='0.1.4',                          # MAJOR.MINOR.PATCH
 	author='Martin Engqvist',
 	author_email='martin_engqvist@hotmail.com',
 	url='https://github.com/EngqvistLab/UniRep',
-    packages=find_packages(exclude=['contrib', 'docs', 'tests*']), #find folders containing scripts, exclude irrelevant ones
-    install_requires=['tensorflow==1.15.0', 'numpy==1.18.1', 'pandas==1.0.1', 'biopython==1.76'],
+        packages=find_packages(exclude=['contrib', 'docs', 'tests*']), #find folders containing scripts, exclude irrelevant ones
+        install_requires=['tensorflow==1.15.0', 'numpy==1.18.1', 'pandas==1.0.1', 'biopython==1.76'],
+        include_package_data=True,
 	license='GPLv3+',
 	classifiers=[
 	# How mature is this project? Common values are
