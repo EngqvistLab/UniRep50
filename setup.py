@@ -28,10 +28,10 @@ if sys.version_info[0] == 2:
 long_description = 'The aim of this package is to easily obtain UniRep50 embeddings for protein sequences.'
 
 setup(
-	name='UniRep50',    # This is the name of your PyPI-package.
+	name='unirep',    # This is the name of your PyPI-package.
 	description='Obtain UniRep50 embeddings for protein sequences.',       #package description
     long_description=long_description,
-    version='0.1.1',                          # MAJOR.MINOR.PATCH
+    version='0.1.2',                          # MAJOR.MINOR.PATCH
 	author='Martin Engqvist',
 	author_email='martin_engqvist@hotmail.com',
 	url='https://github.com/EngqvistLab/UniRep',
