@@ -36,7 +36,7 @@ setup(
 	author_email='martin_engqvist@hotmail.com',
 	url='https://github.com/EngqvistLab/UniRep',
     packages=find_packages(exclude=['contrib', 'docs', 'tests*']), #find folders containing scripts, exclude irrelevant ones
-    install_requires=[],
+    install_requires=['tensorflow==1.15.0', 'numpy==1.18.1', 'pandas==1.0.1', 'biopython==1.76'],
 	license='GPLv3+',
 	classifiers=[
 	# How mature is this project? Common values are
@@ -60,7 +60,8 @@ setup(
 	'Programming Language :: Python :: 3.3',
 	'Programming Language :: Python :: 3.4',
 	'Programming Language :: Python :: 3.5',
-	'Programming Language :: Python :: 3.6'],
+	'Programming Language :: Python :: 3.6',
+	'Programming Language :: Python :: 3.7',],
     python_requires='>=3', #python version
     keywords='protein sequence embeddings'
 )
