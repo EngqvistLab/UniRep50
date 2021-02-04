@@ -31,7 +31,7 @@ setup(
 	name='unirep',    # This is the name of your PyPI-package.
 	description='Obtain UniRep50 embeddings for protein sequences.',       #package description
         long_description=long_description,
-        version='0.1.4',                          # MAJOR.MINOR.PATCH
+        version='0.1.5',                          # MAJOR.MINOR.PATCH
 	author='Martin Engqvist',
 	author_email='martin_engqvist@hotmail.com',
 	url='https://github.com/EngqvistLab/UniRep',
