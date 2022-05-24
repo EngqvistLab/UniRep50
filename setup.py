@@ -36,7 +36,7 @@ setup(
 	author_email='martin_engqvist@hotmail.com',
 	url='https://github.com/EngqvistLab/UniRep',
         packages=find_packages(exclude=['contrib', 'docs', 'tests*']), #find folders containing scripts, exclude irrelevant ones
-        install_requires=['tensorflow==1.15.0', 'numpy==1.18.1', 'pandas==1.0.1', 'biopython==1.76'],
+        install_requires=['tensorflow==2.6.4', 'numpy==1.18.1', 'pandas==1.0.1', 'biopython==1.76'],
         include_package_data=True,
 	license='GPLv3+',
 	classifiers=[
